@@ -6,7 +6,7 @@ Server maintains one unified model with shared encoder and task-specific heads
 
 import torch
 import torch.nn as nn
-from transformers import AutoModel, AutoConfig
+from transformers import AutoModel, AutoConfig, AlbertModel
 from typing import List, Dict, Optional
 import logging
 
@@ -31,7 +31,17 @@ class MTLServerModel(nn.Module):
         
         # Shared BERT encoder (lower layers)
         logger.info(f"Initializing MTL Server Model with shared encoder: {base_model_name}")
-        self.bert = AutoModel.from_pretrained(base_model_name)
+        
+        # Try to load as AlbertModel directly if applicable to avoid AutoModel dynamic loading issues
+        if "albert" in base_model_name.lower():
+            try:
+                logger.info(f"Explicitly loading as AlbertModel: {base_model_name}")
+                self.bert = AlbertModel.from_pretrained(base_model_name)
+            except Exception as e:
+                logger.warning(f"Failed to load as AlbertModel directly: {e}. Falling back to AutoModel.")
+                self.bert = AutoModel.from_pretrained(base_model_name)
+        else:
+            self.bert = AutoModel.from_pretrained(base_model_name)
         self.hidden_size = self.bert.config.hidden_size
         
         # Task-specific heads (upper layers)
