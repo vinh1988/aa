@@ -10,6 +10,21 @@ echo "Project Root: $PROJECT_ROOT"
 # Experiment directory
 WORK_DIR="$SCRIPT_DIR/fl-mtl-slms-alberbase-v2-sts-qqp-sst2"
 
+# Kaggle-specific setup
+if [ -d "/kaggle" ]; then
+    echo "Kaggle environment detected."
+    # Define writable directory in Kaggle
+    KAGGLE_WORK_DIR="/kaggle/working/fl-mtl-slms-alberbase-v2-sts-qqp-sst2"
+    
+    echo "Copying experiment files to writable directory: $KAGGLE_WORK_DIR"
+    # Create parent dir if needed (though cp -r handles creation of dest if name provided)
+    mkdir -p "/kaggle/working"
+    cp -r "$WORK_DIR" "$KAGGLE_WORK_DIR"
+    
+    # Update WORK_DIR to the writable location
+    WORK_DIR="$KAGGLE_WORK_DIR"
+fi
+
 # Install dependencies if requirements.txt exists
 if [ -f "$WORK_DIR/requirements.txt" ]; then
     echo "Installing dependencies..."
