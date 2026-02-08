@@ -73,7 +73,14 @@ python federated_main.py --mode client --client_id stsb_client --tasks stsb > st
 CLIENT3_PID=$!
 echo "STSB Client PID: $CLIENT3_PID"
 
-echo "All processes launched! Logs are being written to server.log, sst2_client.log, qqp_client.log, and stsb_client.log."
+echo "All processes launched!"
+echo "Logs are being written to directory: $(pwd)"
+echo "Log files:"
+ls -l *.log
+
+echo "Tailing server log to check for immediate errors..."
+sleep 5
+head -n 20 server.log
 
 # Wait for server process to finish
 wait $SERVER_PID
