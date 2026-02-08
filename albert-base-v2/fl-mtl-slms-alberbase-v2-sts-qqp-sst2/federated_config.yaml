@@ -1,0 +1,55 @@
+# Enhanced Federated Learning Configuration (YAML Format)
+# ALBERT-base-v2 with Full Fine-Tuning (No LoRA) - Standard MTL
+
+model:
+  server_model: "albert-base-v2"  # ALBERT-base-v2 (12 layers, 768 hidden, ~12M params)
+  client_model: "albert-base-v2"  # ALBERT-base-v2
+
+synchronization:
+  enabled: true                    # Enable model synchronization
+  frequency: "per_round"          # Sync frequency
+  global_model_sharing: true      # Share global model with clients
+
+training:
+  num_rounds: 25                   # Number of federated rounds (need at least 2 to see global model metrics)
+  min_clients: 1                  # Minimum clients required
+  max_clients: 3                  # Maximum clients supported
+  expected_clients: 3             # Expected clients to wait for (SST2, QQP, STSB)
+  local_epochs: 1                 # Local epochs per round
+  batch_size: 4                  # Batch size for training (INCREASED for faster training)
+  learning_rate: 0.00002         # Learning rate (2e-5, reduced 10x for BERT-Medium stability)
+
+task_configs:
+  sst2:                          # SST-2 sentiment analysis
+    train_samples: 66477           # IMPROVED: Increased 10x from 500 to 5000
+    val_samples: 872             # IMPROVED: Increased 10x from 100 to 1000
+    random_seed: 42              # Reproducibility
+
+  qqp:                           # QQP question pairs
+    train_samples: 323415            # Reduced for faster testing (use 323415 for full training)
+    val_samples: 40431               # Reduced for faster testing (use 40431 for full training)
+    random_seed: 42              # Reproducibility
+
+  stsb:                          # STSB semantic similarity
+    train_samples: 4249           # IMPROVED: Increased 10x from 500 to 5000
+    val_samples: 1500             # IMPROVED: Increased 10x from 100 to 1000
+    random_seed: 42              # Reproducibility
+
+communication:
+  port: 8771                     # WebSocket server port
+  timeout: 60                    # Client timeout (seconds)
+  websocket_timeout: 30          # WebSocket timeout (seconds)
+  retry_attempts: 3              # Retry attempts
+  round_timeout: 3400            # Timeout for collecting client updates per round (56.7 minutes)
+  send_timeout: 3600             # Timeout for sending large updates (60 minutes - for full dataset training)
+
+output:
+  results_dir: "federated_results"  # Results directory
+  log_level: "INFO"              # Logging level
+  save_checkpoints: true         # Save model checkpoints
+
+monitoring:
+  enable_gpu_monitoring: true     # Track GPU/CPU usage
+  enable_validation_tracking: true # Track validation metrics
+  resource_sampling_interval: 10  # Seconds between samples
+  save_resource_logs: true       # Save resource usage logs

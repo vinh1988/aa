@@ -1,0 +1,4 @@
+python federated_main.py --mode server --config federated_config.yaml
+python federated_main.py --mode client --client_id sst2_client --tasks sst2 --config federated_config.yaml
+python federated_main.py --mode client --client_id qqp_client --tasks qqp --config federated_config.yaml
+python federated_main.py --mode client --client_id stsb_client --tasks stsb --config federated_config.yaml
