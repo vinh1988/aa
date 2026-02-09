@@ -13,16 +13,41 @@ WORK_DIR="$SCRIPT_DIR/fl-mtl-slms-alberbase-v2-sts-qqp-sst2"
 # Kaggle-specific setup
 if [ -d "/kaggle" ]; then
     echo "Kaggle environment detected."
-    # Define writable directory in Kaggle
-    KAGGLE_WORK_DIR="/kaggle/working/fl-mtl-slms-alberbase-v2-sts-qqp-sst2"
+    # Define writable directory in Kaggle with the structure user expects
+    # fl-mtl... is inside models/albert-base-v2, so let's replicate that structure if needed
+    # But user specifically mentioned: /kaggle/working/aa/albert-base-v2
+    
+    KAGGLE_PROJECT_ROOT="/kaggle/working/aa/albert-base-v2"
+    KAGGLE_WORK_DIR="$KAGGLE_PROJECT_ROOT/fl-mtl-slms-alberbase-v2-sts-qqp-sst2"
     
     echo "Copying experiment files to writable directory: $KAGGLE_WORK_DIR"
-    # Create parent dir if needed (though cp -r handles creation of dest if name provided)
-    mkdir -p "/kaggle/working"
-    cp -r "$WORK_DIR" "$KAGGLE_WORK_DIR"
+    
+    # Create the directory structure
+    mkdir -p "$KAGGLE_WORK_DIR"
+    
+    # Copy contents of the current WORK_DIR (fl-mtl...) to the new KAGGLE_WORK_DIR
+    # Note: cp -r source/* dest/ copies contents. Ensure hidden files are copied if needed.
+    # To be safe, copy the directory itself if we were one level up, but we are inside script which is outside work_dir
+    # cp -r "$WORK_DIR/." "$KAGGLE_WORK_DIR/"
+    cp -r "$WORK_DIR"/* "$KAGGLE_WORK_DIR/"
     
     # Update WORK_DIR to the writable location
     WORK_DIR="$KAGGLE_WORK_DIR"
+    
+    # Update PROJECT_ROOT to maintain relative path integrity if needed
+    # If original project root was ../../.., relative to new work dir it is still ../../.. ?
+    # /kaggle/working/aa/albert-base-v2/fl-mtl...
+    # ../../.. -> /kaggle/working/aa ? No.
+    # ../../.. from fl-mtl is albert-base-v2 -> aa -> working.
+    # So PROJECT_ROOT would be /kaggle/working.
+    # But source code (other libs) might be in /kaggle/input...
+    
+    # CRITICAL: We need PYTHONPATH to include the original source code if it's not copied.
+    # If src is INSIDE work_dir (which it is: fl-mtl/src), then copying work_dir is sufficient for src.
+    # But if there are other dependencies in project root...
+    # Let's keep PYTHONPATH pointing to original input for safety, OR add new root.
+    
+    export PYTHONPATH="$PYTHONPATH:$PROJECT_ROOT"
 fi
 
 # Install dependencies if requirements.txt exists
