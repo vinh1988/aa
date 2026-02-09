@@ -26,9 +26,15 @@ if [ -d "/kaggle" ]; then
 fi
 
 # Install dependencies if requirements.txt exists
+# Install dependencies if requirements.txt exists
 if [ -f "$WORK_DIR/requirements.txt" ]; then
-    echo "Installing dependencies..."
-    pip install -r "$WORK_DIR/requirements.txt"
+    echo "Installing dependencies from $WORK_DIR/requirements.txt..."
+    # Use --upgrade to ensure we replace any pre-installed incompatible versions
+    pip install --upgrade -r "$WORK_DIR/requirements.txt"
+    
+    # Verify installation
+    echo "Verifying transformers installation:"
+    pip show transformers
 fi
 
 # Function to handle cleanup on exit

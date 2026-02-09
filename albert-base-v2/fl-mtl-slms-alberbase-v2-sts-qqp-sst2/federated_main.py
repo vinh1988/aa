@@ -55,6 +55,24 @@ def main():
     args = parser.parse_args()
 
     try:
+        # Configure logging immediately to ensure we see all debug output
+        import logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        logger = logging.getLogger("MAIN")
+
+        # Environment Check
+        import transformers
+        import torch
+        logger.info(f"Python Environment Check:")
+        logger.info(f"Transformers version: {transformers.__version__}")
+        logger.info(f"Torch version: {torch.__version__}")
+        
+        try:
+            from transformers import AlbertModel
+            logger.info("Successfully imported AlbertModel")
+        except ImportError as e:
+            logger.error(f"Failed to import AlbertModel: {e}")
+
         # Load configuration
         config = load_config(args)
 
