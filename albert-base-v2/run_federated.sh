@@ -52,25 +52,33 @@ fi
 
 # Install dependencies if requirements.txt exists
 # Install dependencies if requirements.txt exists
+# Install dependencies if requirements.txt exists
 if [ -f "$WORK_DIR/requirements.txt" ]; then
     echo "Installing dependencies from $WORK_DIR/requirements.txt..."
     
-    # Create a local library directory to ensure isolation from system packages
-    LIB_DIR="$WORK_DIR/lib"
-    mkdir -p "$LIB_DIR"
+    # Create a virtual environment to ensure verified isolation
+    VENV_DIR="$WORK_DIR/venv"
+    python3 -m venv "$VENV_DIR"
     
-    # Install dependencies into the local directory
-    # using --ignore-installed to ensuring we ignore system packages
-    pip install --upgrade --ignore-installed --target "$LIB_DIR" -r "$WORK_DIR/requirements.txt"
+    # Activate the virtual environment
+    source "$VENV_DIR/bin/activate"
     
-    # Add local lib to PYTHONPATH (prepend it so it takes precedence)
-    export PYTHONPATH="$LIB_DIR:$PYTHONPATH"
+    # Upgrade pip in venv
+    pip install --upgrade pip
+    
+    # Install dependencies into the venv
+    # We can use normal install since we are in a fresh venv
+    pip install -r "$WORK_DIR/requirements.txt"
     
     # Verify installation
     echo "Verifying installation:"
-    # We need to set PYTHONPATH for pip show to work on target dir? No, pip show looks at site-packages.
-    # But for python usage:
     python3 -c "import sys; print(sys.path); import transformers; print(f'Transformers file: {transformers.__file__}'); print(f'Transformers version: {transformers.__version__}')"
+else
+    # Fallback to system python/venv if no requirements (unlikely in this flow)
+    # But usually we want to use the venv if created
+    if [ -d "$WORK_DIR/venv" ]; then
+        source "$WORK_DIR/venv/bin/activate"
+    fi
 fi
 
 # Function to handle cleanup on exit
@@ -84,10 +92,19 @@ cleanup() {
 trap cleanup SIGINT SIGTERM EXIT
 
 # Set PYTHONPATH
-export PYTHONPATH=$PROJECT_ROOT
+# We still need PROJECT_ROOT in PYTHONPATH for local source code imports
+export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
 
 # Navigate to work directory
 cd "$WORK_DIR" || exit
+
+# Use the venv python explicitly or rely on activated environment
+# Since we sourced activate, 'python' should point to venv python.
+# But for background jobs in a script, it's safer to use the absolute path if we didn't export the activation correctly to subshells.
+# However, source works in the current shell.
+# Let's verify python path
+PYTHON_EXEC="$(which python)"
+echo "Using Python: $PYTHON_EXEC"
 
 # Terminal 1: Server
 echo "Starting Server..."
