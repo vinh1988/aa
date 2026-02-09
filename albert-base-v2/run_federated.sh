@@ -54,13 +54,23 @@ fi
 # Install dependencies if requirements.txt exists
 if [ -f "$WORK_DIR/requirements.txt" ]; then
     echo "Installing dependencies from $WORK_DIR/requirements.txt..."
-    # Use --upgrade --force-reinstall to ensure we have a clean state for critical libs
-    pip install --upgrade --force-reinstall transformers accelerate -c "$WORK_DIR/requirements.txt"
-    pip install --upgrade -r "$WORK_DIR/requirements.txt"
+    
+    # Create a local library directory to ensure isolation from system packages
+    LIB_DIR="$WORK_DIR/lib"
+    mkdir -p "$LIB_DIR"
+    
+    # Install dependencies into the local directory
+    # using --ignore-installed to ensuring we ignore system packages
+    pip install --upgrade --ignore-installed --target "$LIB_DIR" -r "$WORK_DIR/requirements.txt"
+    
+    # Add local lib to PYTHONPATH (prepend it so it takes precedence)
+    export PYTHONPATH="$LIB_DIR:$PYTHONPATH"
     
     # Verify installation
     echo "Verifying installation:"
-    pip show transformers accelerate
+    # We need to set PYTHONPATH for pip show to work on target dir? No, pip show looks at site-packages.
+    # But for python usage:
+    python3 -c "import sys; print(sys.path); import transformers; print(f'Transformers file: {transformers.__file__}'); print(f'Transformers version: {transformers.__version__}')"
 fi
 
 # Function to handle cleanup on exit
