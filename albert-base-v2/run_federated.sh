@@ -54,12 +54,13 @@ fi
 # Install dependencies if requirements.txt exists
 if [ -f "$WORK_DIR/requirements.txt" ]; then
     echo "Installing dependencies from $WORK_DIR/requirements.txt..."
-    # Use --upgrade to ensure we replace any pre-installed incompatible versions
+    # Use --upgrade --force-reinstall to ensure we have a clean state for critical libs
+    pip install --upgrade --force-reinstall transformers accelerate -c "$WORK_DIR/requirements.txt"
     pip install --upgrade -r "$WORK_DIR/requirements.txt"
     
     # Verify installation
-    echo "Verifying transformers installation:"
-    pip show transformers
+    echo "Verifying installation:"
+    pip show transformers accelerate
 fi
 
 # Function to handle cleanup on exit
